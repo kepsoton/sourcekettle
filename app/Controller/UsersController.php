@@ -437,7 +437,7 @@ class UsersController extends AppController {
 		if (!$this->request->is('post')) { // If not a submitted form
 			return;
 		}
-		$user_id = $this->createUserAccount(array("User.name", "User.email"), '__sendInvitedUserMail');
+		$user_id = $this->createUserAccount(array("User.name", "User.email", "User.is_admin", "User.is_active"), '__sendInvitedUserMail', true);
 		if ($user_id) {
 			$this->log("[UsersController.invite] user[${user_id}] created by user[" . $this->Auth->user('id') . "]", 'sourcekettle');
 			$this->Session->setFlash(__('New User invited successfully.'), 'default', array(), 'success');
@@ -476,11 +476,15 @@ class UsersController extends AppController {
 	 * @param $mailFunction The mail function to call on success
 	 * @return integer | null
 	 */
-	private function createUserAccount($fields, $mailFunction) {
+	private function createUserAccount($fields, $mailFunction, $setActive=false) {
 		$this->User->create();
 		$data = $this->_cleanPost($fields);
 		// Fudge in a random password to stop it looking like an external account
 		$data['User']['password'] = $this->__generateKey(25);
+		// Set active if it's a user inviting rather than an admin add.
+		if ($setActive) {
+            $data['User']['is_active'] = true;
+        }
 		if ($this->User->save($data)) {
 			$user_id = $this->User->getLastInsertID();
 
@@ -512,7 +516,7 @@ class UsersController extends AppController {
 			throw new NotFoundException(__('Invalid user'));
 		}
 
-		if ($this->request->is('post')) {
+		if ($this->request->is('post') || $this->request->is('put')) {
 			// Admins may change admin/active status
 			$data = $this->_cleanPost(array("User.name", "User.email", "User.is_admin", "User.is_active"));
 			$data['User']['id'] = $id;

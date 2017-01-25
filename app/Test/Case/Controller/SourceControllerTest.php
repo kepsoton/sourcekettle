@@ -682,7 +682,7 @@ class SourceControllerTestCase extends AppControllerTest {
 
 		$this->_fakeLogin(5);
 		$ret = $this->testAction('/project/private/source/commit', array('method' => 'get', 'return' => 'view'));
-		$this->assertRedirect(array('controller' => 'source', 'action' => 'commits', 'project' => 'private', 'branch' => 'master'));
+		$this->assertRedirect('/source/commits/private/master');
 
 	}
 
